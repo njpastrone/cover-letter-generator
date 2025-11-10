@@ -282,7 +282,21 @@ else:
         height=200
     )
 
-save_resume_checkbox = st.checkbox("Save this resume for future use")
+# Save resume button
+if st.button("Save Resume"):
+    if not all([candidate_name, candidate_address, resume_text]):
+        st.error("Please fill in name, address, and resume text to save.")
+    else:
+        resume_data = {
+            "name": candidate_name,
+            "address": candidate_address,
+            "resume_text": resume_text,
+            "date_saved": datetime.now().strftime("%Y-%m-%d %H:%M")
+        }
+        save_resume(resume_data)
+        st.success(f"Resume saved! You now have {len(load_resumes())} saved resume(s).")
+
+st.divider()
 
 # Job details
 st.subheader("Job Details")
@@ -309,17 +323,6 @@ if st.button("Generate Cover Letter", type="primary"):
     else:
         with st.spinner("Generating your cover letter..."):
             try:
-                # Save resume if requested
-                if save_resume_checkbox:
-                    resume_data = {
-                        "name": candidate_name,
-                        "address": candidate_address,
-                        "resume_text": resume_text,
-                        "date_saved": datetime.now().strftime("%Y-%m-%d %H:%M")
-                    }
-                    save_resume(resume_data)
-                    st.success("Resume saved!")
-
                 # Generate cover letter
                 cover_letter = generate_cover_letter(
                     resume_text,
