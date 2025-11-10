@@ -14,6 +14,26 @@ load_dotenv()
 RESUME_FILE = "resumes.json"
 COVER_LETTER_FILE = "cover_letters.json"
 RATINGS_FILE = "ratings.json"
+PROFILE_FILE = "profile.json"
+
+
+def load_profile():
+    """Load user profile with links and preferences."""
+    if os.path.exists(PROFILE_FILE):
+        with open(PROFILE_FILE, "r") as f:
+            return json.load(f)
+    return {
+        "linkedin": "",
+        "github": "",
+        "portfolio": "",
+        "default_resume_index": None
+    }
+
+
+def save_profile(profile_data):
+    """Save user profile to JSON file."""
+    with open(PROFILE_FILE, "w") as f:
+        json.dump(profile_data, f, indent=2)
 
 
 def load_resumes():
@@ -75,6 +95,14 @@ def extract_text_from_docx(docx_file):
     return text
 
 
+def get_latest_resume():
+    """Get the most recently saved resume."""
+    resumes = load_resumes()
+    if resumes:
+        return resumes[-1]
+    return None
+
+
 def generate_cover_letter(resume_text, candidate_name, candidate_address, company_name, role_title, why_want_job, job_description=""):
     """Generate a cover letter using Claude Haiku API."""
 
@@ -133,21 +161,65 @@ Generate the complete cover letter now, following the structure exactly. Write i
 
 
 # Streamlit UI
-st.title("Cover Letter Generator")
+st.set_page_config(page_title="Application Assistant", page_icon="📄", layout="wide")
 
-# Sidebar for resume management
+st.title("Application Assistant")
+st.caption("Your AI-powered job application toolkit")
+
+# Load profile
+profile = load_profile()
+
+# Sidebar for profile and resume management
 with st.sidebar:
+    st.header("Your Profile")
+
+    # Profile links section
+    with st.expander("Profile Links", expanded=False):
+        linkedin_url = st.text_input("LinkedIn URL:", value=profile.get("linkedin", ""))
+        github_url = st.text_input("GitHub URL:", value=profile.get("github", ""))
+        portfolio_url = st.text_input("Portfolio URL:", value=profile.get("portfolio", ""))
+
+        if st.button("Save Profile Links"):
+            profile["linkedin"] = linkedin_url
+            profile["github"] = github_url
+            profile["portfolio"] = portfolio_url
+            save_profile(profile)
+            st.success("Profile links saved!")
+
+    # Display saved links
+    if profile.get("linkedin") or profile.get("github") or profile.get("portfolio"):
+        st.subheader("Quick Links")
+        if profile.get("linkedin"):
+            st.markdown(f"[LinkedIn]({profile['linkedin']})")
+        if profile.get("github"):
+            st.markdown(f"[GitHub]({profile['github']})")
+        if profile.get("portfolio"):
+            st.markdown(f"[Portfolio]({profile['portfolio']})")
+
+    st.divider()
     st.header("Resume Management")
 
     # Load existing resumes
     saved_resumes = load_resumes()
 
     if saved_resumes:
+        # Quick action: Use Latest Resume
+        latest_resume = saved_resumes[-1]
+        st.info(f"Latest: {latest_resume['name']}")
+        if st.button("Use Latest Resume", use_container_width=True):
+            st.session_state["resume_text"] = latest_resume["resume_text"]
+            st.session_state["candidate_name"] = latest_resume["name"]
+            st.session_state["candidate_address"] = latest_resume["address"]
+            st.success("Latest resume loaded!")
+            st.rerun()
+
+        st.divider()
+
+        # Full resume selector
         resume_options = ["Enter new resume"] + [f"{r['name']} - {r['date_saved']}" for r in saved_resumes]
-        selected_resume = st.selectbox("Select a resume:", resume_options)
+        selected_resume = st.selectbox("Or select any resume:", resume_options)
 
         if selected_resume != "Enter new resume":
-            # Use selected resume
             resume_index = resume_options.index(selected_resume) - 1
             selected_resume_data = saved_resumes[resume_index]
             st.session_state["resume_text"] = selected_resume_data["resume_text"]
@@ -157,7 +229,7 @@ with st.sidebar:
         st.info("No saved resumes yet. Enter your first resume below.")
 
     st.divider()
-    st.header("Saved Cover Letters")
+    st.header("Cover Letter History")
     saved_cover_letters = load_cover_letters()
     if saved_cover_letters:
         st.write(f"Total saved: {len(saved_cover_letters)}")

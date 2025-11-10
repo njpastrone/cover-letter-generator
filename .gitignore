@@ -2,6 +2,7 @@
 resumes.json
 cover_letters.json
 ratings.json
+profile.json
 __pycache__/
 *.pyc
 .streamlit/

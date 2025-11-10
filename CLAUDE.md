@@ -1,4 +1,4 @@
-# Cover Letter Generator - Project Documentation
+# Application Assistant - Project Documentation
 
 ## NON-NEGOTIABLE PROJECT RULES
 
@@ -52,11 +52,18 @@ Candidate's Typed First and Last Name
 
 ## Project Overview
 
-A simple Streamlit application that generates professional cover letters based on:
-1. User's resume (can save and reuse resumes, upload PDF/DOCX files)
-2. Company and role name
-3. Job description (optional but recommended)
-4. User's reason for wanting the job
+Application Assistant is a comprehensive job application toolkit that helps users:
+1. Manage their professional profile (LinkedIn, GitHub, Portfolio links)
+2. Store and reuse resumes (supports paste, PDF, and DOCX uploads)
+3. Generate tailored cover letters using AI
+4. Track application history and cover letter performance
+
+### Core Workflow
+1. Save profile links and latest resume
+2. Quick-load latest resume with one click
+3. Input company, role, and job description
+4. Generate professional cover letter
+5. Rate output and save for future reference
 
 ## Technical Stack
 
@@ -69,12 +76,23 @@ A simple Streamlit application that generates professional cover letters based o
 
 ## Features Implemented
 
-### Core Features
-- Resume management (save, load, reuse)
-- PDF/DOCX resume upload support
-- Cover letter generation with Claude Haiku
+### Profile Management
+- Save LinkedIn, GitHub, and Portfolio URLs
+- Quick access links displayed in sidebar
+- Profile persists across sessions
+
+### Resume Management
+- Save multiple resumes with metadata
+- Upload PDF/DOCX files with automatic text extraction
+- "Use Latest Resume" one-click button for fast workflow
+- Full resume history with dropdown selector
+
+### Cover Letter Generation
+- Claude Haiku AI-powered generation
 - Job description context for better tailoring
+- Professional format following template
 - Download generated cover letters
+- Save cover letters to history
 
 ### Data Collection & ML Preparation
 - Save cover letters for future reference
@@ -94,6 +112,16 @@ A simple Streamlit application that generates professional cover letters based o
 
 ## Data Files
 
-- `resumes.json` - Saved user resumes with metadata
-- `cover_letters.json` - All generated and saved cover letters
+- `profile.json` - User profile with LinkedIn, GitHub, Portfolio URLs and preferences
+- `resumes.json` - Saved user resumes with metadata (name, address, text, date)
+- `cover_letters.json` - All generated and saved cover letters with metadata
 - `ratings.json` - Rated cover letters with full context for ML training
+
+## Future Enhancements
+
+- Application tracking (companies applied to, dates, status)
+- Email templates for follow-ups
+- Interview preparation materials
+- Multiple cover letter templates
+- Export to Word/PDF format
+- Browser extension for job board integration
