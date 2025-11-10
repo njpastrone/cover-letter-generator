@@ -1,0 +1,7 @@
+.env
+resumes.json
+cover_letters.json
+ratings.json
+__pycache__/
+*.pyc
+.streamlit/
