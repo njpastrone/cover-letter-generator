@@ -187,31 +187,23 @@ profile = load_profile()
 with st.sidebar:
     st.header("Your Profile")
 
-    # Profile links section
-    with st.expander("Profile Links", expanded=False):
-        linkedin_url = st.text_input("LinkedIn URL:", value=profile.get("linkedin", ""))
-        github_url = st.text_input("GitHub URL:", value=profile.get("github", ""))
-        portfolio_url = st.text_input("Portfolio URL:", value=profile.get("portfolio", ""))
+    # Section 1: Candidate Info
+    candidate_name = st.text_input(
+        "Your Full Name:",
+        value=st.session_state.get("candidate_name", "")
+    )
 
-        if st.button("Save Profile Links"):
-            profile["linkedin"] = linkedin_url
-            profile["github"] = github_url
-            profile["portfolio"] = portfolio_url
-            save_profile(profile)
-            st.success("Profile links saved!")
-
-    # Display saved links
-    if profile.get("linkedin") or profile.get("github") or profile.get("portfolio"):
-        st.subheader("Quick Links")
-        if profile.get("linkedin"):
-            st.markdown(f"[LinkedIn]({profile['linkedin']})")
-        if profile.get("github"):
-            st.markdown(f"[GitHub]({profile['github']})")
-        if profile.get("portfolio"):
-            st.markdown(f"[Portfolio]({profile['portfolio']})")
+    candidate_address = st.text_area(
+        "Your Address:",
+        value=st.session_state.get("candidate_address", ""),
+        height=80,
+        help="Auto-filled from saved resumes but you can edit it."
+    )
 
     st.divider()
-    st.header("Resume Management")
+
+    # Section 2: Resume Management
+    st.subheader("Resume Management")
 
     # Load existing resumes
     saved_resumes = load_resumes()
@@ -253,25 +245,8 @@ with st.sidebar:
     else:
         st.info("No saved resumes yet. Add your first resume below.")
 
-    st.divider()
-
-    # Candidate information in sidebar
-    st.header("Candidate Info")
-
-    candidate_name = st.text_input(
-        "Your Full Name:",
-        value=st.session_state.get("candidate_name", "")
-    )
-
-    candidate_address = st.text_area(
-        "Your Address (editable):",
-        value=st.session_state.get("candidate_address", ""),
-        height=80,
-        help="This will be auto-filled from saved resumes but you can edit it."
-    )
-
-    # Resume input with file upload option
-    with st.expander("Add/Update Resume", expanded=False):
+    # Add/Update Resume section
+    with st.expander("Add New Resume", expanded=False):
         upload_option = st.radio("How would you like to provide your resume?", ["Paste text", "Upload file"], horizontal=True)
 
         if upload_option == "Upload file":
@@ -328,12 +303,44 @@ with st.sidebar:
                 st.success(f"Resume saved! You now have {len(load_resumes())} saved resume(s).")
 
     st.divider()
-    st.header("Cover Letter History")
+
+    # Section 3: Profile Links
+    st.subheader("Profile Links")
+
+    # Display saved links
+    if profile.get("linkedin") or profile.get("github") or profile.get("portfolio"):
+        if profile.get("linkedin"):
+            st.markdown(f"[LinkedIn]({profile['linkedin']})")
+        if profile.get("github"):
+            st.markdown(f"[GitHub]({profile['github']})")
+        if profile.get("portfolio"):
+            st.markdown(f"[Portfolio]({profile['portfolio']})")
+    else:
+        st.info("No profile links saved yet.")
+
+    # Edit profile links
+    with st.expander("Edit Profile Links", expanded=False):
+        linkedin_url = st.text_input("LinkedIn URL:", value=profile.get("linkedin", ""))
+        github_url = st.text_input("GitHub URL:", value=profile.get("github", ""))
+        portfolio_url = st.text_input("Portfolio URL:", value=profile.get("portfolio", ""))
+
+        if st.button("Save Profile Links", use_container_width=True):
+            profile["linkedin"] = linkedin_url
+            profile["github"] = github_url
+            profile["portfolio"] = portfolio_url
+            save_profile(profile)
+            st.success("Profile links saved!")
+            st.rerun()
+
+    st.divider()
+
+    # Section 4: Cover Letter History
+    st.subheader("Cover Letter History")
     saved_cover_letters = load_cover_letters()
     if saved_cover_letters:
-        st.write(f"Total saved: {len(saved_cover_letters)}")
+        st.caption(f"Total saved: {len(saved_cover_letters)}")
         for i, cl in enumerate(reversed(saved_cover_letters[-5:])):
-            with st.expander(f"{cl['company']} - {cl['role']}"):
+            with st.expander(f"{cl['company']} - {cl['role']}", expanded=False):
                 st.text(cl['cover_letter'][:200] + "...")
                 st.caption(f"Created: {cl['date_created']}")
     else:
@@ -356,6 +363,7 @@ else:
 st.divider()
 
 # Job details
+st.subheader("Job Details")
 
 company_name = st.text_input("Company Name:")
 role_title = st.text_input("Role/Position Title:")
