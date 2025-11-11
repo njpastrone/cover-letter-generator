@@ -185,8 +185,55 @@ profile = load_profile()
 
 # Sidebar for profile and resume management
 with st.sidebar:
-    # Section 1: Resume Management
-    st.header("Resume Management")
+    # Section 1: Your Profile (Candidate Info)
+    st.header("Your Profile")
+
+    candidate_name = st.text_input(
+        "Your Full Name:",
+        value=st.session_state.get("candidate_name", "")
+    )
+
+    candidate_address = st.text_area(
+        "Your Address:",
+        value=st.session_state.get("candidate_address", ""),
+        height=80,
+        help="Auto-filled from saved resumes but you can edit it."
+    )
+
+    st.divider()
+
+    # Section 2: Profile Links
+    st.subheader("Profile Links")
+
+    # Display saved links
+    if profile.get("linkedin") or profile.get("github") or profile.get("portfolio"):
+        if profile.get("linkedin"):
+            st.markdown(f"[LinkedIn]({profile['linkedin']})")
+        if profile.get("github"):
+            st.markdown(f"[GitHub]({profile['github']})")
+        if profile.get("portfolio"):
+            st.markdown(f"[Portfolio]({profile['portfolio']})")
+    else:
+        st.info("No profile links saved yet.")
+
+    # Edit profile links
+    with st.expander("Edit Profile Links", expanded=False):
+        linkedin_url = st.text_input("LinkedIn URL:", value=profile.get("linkedin", ""))
+        github_url = st.text_input("GitHub URL:", value=profile.get("github", ""))
+        portfolio_url = st.text_input("Portfolio URL:", value=profile.get("portfolio", ""))
+
+        if st.button("Save Profile Links", use_container_width=True):
+            profile["linkedin"] = linkedin_url
+            profile["github"] = github_url
+            profile["portfolio"] = portfolio_url
+            save_profile(profile)
+            st.success("Profile links saved!")
+            st.rerun()
+
+    st.divider()
+
+    # Section 3: Resume Management
+    st.subheader("Resume Management")
 
     # Load existing resumes
     saved_resumes = load_resumes()
@@ -284,53 +331,6 @@ with st.sidebar:
                     save_resume(resume_data)
 
                 st.success(f"Resume saved! You now have {len(load_resumes())} saved resume(s).")
-
-    st.divider()
-
-    # Section 2: Your Profile (Candidate Info)
-    st.header("Your Profile")
-
-    candidate_name = st.text_input(
-        "Your Full Name:",
-        value=st.session_state.get("candidate_name", "")
-    )
-
-    candidate_address = st.text_area(
-        "Your Address:",
-        value=st.session_state.get("candidate_address", ""),
-        height=80,
-        help="Auto-filled from saved resumes but you can edit it."
-    )
-
-    st.divider()
-
-    # Section 3: Profile Links
-    st.subheader("Profile Links")
-
-    # Display saved links
-    if profile.get("linkedin") or profile.get("github") or profile.get("portfolio"):
-        if profile.get("linkedin"):
-            st.markdown(f"[LinkedIn]({profile['linkedin']})")
-        if profile.get("github"):
-            st.markdown(f"[GitHub]({profile['github']})")
-        if profile.get("portfolio"):
-            st.markdown(f"[Portfolio]({profile['portfolio']})")
-    else:
-        st.info("No profile links saved yet.")
-
-    # Edit profile links
-    with st.expander("Edit Profile Links", expanded=False):
-        linkedin_url = st.text_input("LinkedIn URL:", value=profile.get("linkedin", ""))
-        github_url = st.text_input("GitHub URL:", value=profile.get("github", ""))
-        portfolio_url = st.text_input("Portfolio URL:", value=profile.get("portfolio", ""))
-
-        if st.button("Save Profile Links", use_container_width=True):
-            profile["linkedin"] = linkedin_url
-            profile["github"] = github_url
-            profile["portfolio"] = portfolio_url
-            save_profile(profile)
-            st.success("Profile links saved!")
-            st.rerun()
 
     st.divider()
 
