@@ -20,6 +20,9 @@ Your AI-powered job application toolkit. A simple Streamlit application that hel
 ### Cover Letter Generation
 - Generate professional cover letters using Claude Haiku AI
 - Add job description context for better-tailored cover letters
+- **Customize letter length**: Concise (200-325 words) or Standard (325-450 words)
+- **Choose tone style**: Conversational, Professional, Enthusiastic, or Confident
+- Match tone to company culture (startup, corporate, creative, etc.)
 - Save generated cover letters for future reference
 - View cover letter history in sidebar
 - Download cover letters as text files

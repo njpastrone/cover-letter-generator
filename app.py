@@ -117,14 +117,34 @@ def get_latest_resume():
     return None
 
 
-def generate_cover_letter(resume_text, candidate_name, candidate_address, company_name, role_title, why_want_job, job_description=""):
+def generate_cover_letter(resume_text, candidate_name, candidate_address, company_name, role_title, why_want_job, job_description="", length="concise", tone="conversational"):
     """Generate a cover letter using Claude Haiku API."""
+
+    # Length instructions
+    length_instructions = {
+        "concise": "Keep the cover letter concise and focused, between 200-325 words. Be direct and impactful.",
+        "standard": "Write a standard-length cover letter, between 325-450 words. Provide more detail while staying focused."
+    }
+
+    # Tone instructions
+    tone_instructions = {
+        "conversational": "Use a warm, conversational tone that is professional but approachable. Write as if speaking to a colleague. Avoid overly formal language while maintaining respect.",
+        "professional": "Use a formal, traditional tone. Choose sophisticated vocabulary, avoid contractions, and maintain a serious, business-like demeanor throughout. This is for corporate, finance, law, or government roles.",
+        "enthusiastic": "Use an energetic, passionate tone that shows genuine excitement about the role and company. Express enthusiasm naturally without going overboard. Perfect for startups, creative roles, or mission-driven organizations.",
+        "confident": "Use a bold, direct tone that emphasizes your unique value proposition. Be assertive about your capabilities without arrogance. Focus on what you bring to the table. Ideal for competitive roles and leadership positions."
+    }
 
     jd_context = ""
     if job_description:
         jd_context = f"\nHere is the job description:\n{job_description}\n"
 
     prompt = f"""You are a professional cover letter writer. Generate a cover letter following this exact structure:
+
+IMPORTANT INSTRUCTIONS:
+- {length_instructions.get(length, length_instructions["concise"])}
+- {tone_instructions.get(tone, tone_instructions["conversational"])}
+
+STRUCTURE:
 
 Date: {datetime.now().strftime("%B %d, %Y")}
 
@@ -158,7 +178,7 @@ Here is the candidate's resume:
 Here is why the candidate wants this job:
 {why_want_job}
 
-Generate the complete cover letter now, following the structure exactly. Write in a professional, genuine tone. Do not use emojis. Make it specific to this candidate and company."""
+Generate the complete cover letter now, following the structure exactly. Apply the specified tone and length requirements. Do not use emojis. Make it specific to this candidate and company."""
 
     # Initialize client inside function to avoid initialization issues
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
@@ -380,6 +400,34 @@ why_want_job = st.text_area(
     help="Be honest and specific. This will be refined into professional cover letter language."
 )
 
+st.divider()
+
+# Preferences
+st.subheader("Preferences")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    length_option = st.radio(
+        "Letter Length:",
+        ["Concise (200-325 words)", "Standard (325-450 words)"],
+        index=0,
+        help="Concise is recommended for most applications"
+    )
+
+with col2:
+    tone_option = st.selectbox(
+        "Tone:",
+        [
+            "Conversational - Warm but professional",
+            "Professional - Formal and traditional",
+            "Enthusiastic - Energetic and passionate",
+            "Confident - Bold and direct"
+        ],
+        index=0,
+        help="Match the tone to the company culture"
+    )
+
 # Generate button
 if st.button("Generate Cover Letter", type="primary"):
     if not all([candidate_name, candidate_address, resume_text, company_name, role_title, why_want_job]):
@@ -387,6 +435,10 @@ if st.button("Generate Cover Letter", type="primary"):
     else:
         with st.spinner("Generating your cover letter..."):
             try:
+                # Parse preferences
+                length = "concise" if "Concise" in length_option else "standard"
+                tone = tone_option.split(" - ")[0].lower()
+
                 # Generate cover letter
                 cover_letter = generate_cover_letter(
                     resume_text,
@@ -395,7 +447,9 @@ if st.button("Generate Cover Letter", type="primary"):
                     company_name,
                     role_title,
                     why_want_job,
-                    job_description
+                    job_description,
+                    length,
+                    tone
                 )
 
                 # Store in session state for rating

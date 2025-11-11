@@ -91,6 +91,14 @@ Application Assistant is a comprehensive job application toolkit that helps user
 - Claude Haiku AI-powered generation
 - Job description context for better tailoring
 - Professional format following template
+- **Customizable length options:**
+  - Concise (200-325 words) - Default, recommended for most applications
+  - Standard (325-450 words) - More detailed coverage
+- **Customizable tone options:**
+  - Conversational - Warm but professional, approachable (Default)
+  - Professional - Formal and traditional (best for: corporate, finance, law, government)
+  - Enthusiastic - Energetic and passionate (best for: startups, creative roles, mission-driven orgs)
+  - Confident - Bold and direct (best for: competitive roles, leadership positions)
 - Download generated cover letters
 - Save cover letters to history
 
