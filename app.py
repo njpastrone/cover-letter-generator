@@ -1,7 +1,7 @@
 import streamlit as st
 
 # MUST be the first Streamlit command
-st.set_page_config(page_title="Application Assistant", page_icon="📄", layout="wide")
+st.set_page_config(page_title="AI-Powered Application Assistant", page_icon="🤖", layout="wide")
 
 import json
 import os
@@ -35,7 +35,7 @@ def check_auth():
     """Check if user is authenticated. Returns user_id if authenticated, None otherwise."""
     if "user" not in st.session_state:
         return None
-    return st.session_state["user"]["id"]
+    return st.session_state["user"].id
 
 
 def login_user(email, password):
@@ -62,7 +62,7 @@ def signup_user(email, password):
                 "candidate_name": "",
                 "candidate_address": ""
             }).execute()
-            return True, "Account created! Please check your email to verify your account, then log in."
+            return True, "Account created successfully! You can now log in."
         return False, "Failed to create account"
     except Exception as e:
         return False, str(e)
@@ -80,13 +80,30 @@ def logout_user():
 
 
 def show_auth_page():
-    """Display login/signup page."""
-    st.title("Application Assistant")
-    st.markdown("### Welcome! Please log in or create an account.")
+    """Display login/signup page with guest option."""
+    st.title("AI-Powered Application Assistant")
+    st.markdown("### Welcome! Generate cover letters and answer application questions.")
 
-    tab1, tab2 = st.tabs(["Login", "Sign Up"])
+    st.info("Create an account to save your resumes, cover letters, and track your applications. Or continue as guest to use the app without saving.")
+
+    tab1, tab2, tab3 = st.tabs(["Continue as Guest", "Login", "Sign Up"])
 
     with tab1:
+        st.subheader("Guest Mode")
+        st.markdown("""
+        **Try the app without creating an account:**
+        - Generate cover letters
+        - Answer application questions
+        - Download your outputs
+
+        **To save your work and access history, create an account!**
+        """)
+
+        if st.button("Continue as Guest", type="primary", use_container_width=True):
+            st.session_state["guest_mode"] = True
+            st.rerun()
+
+    with tab2:
         st.subheader("Login")
         email = st.text_input("Email", key="login_email")
         password = st.text_input("Password", type="password", key="login_password")
@@ -96,13 +113,15 @@ def show_auth_page():
                 success, message = login_user(email, password)
                 if success:
                     st.success(message)
+                    if "guest_mode" in st.session_state:
+                        del st.session_state["guest_mode"]
                     st.rerun()
                 else:
                     st.error(f"Login failed: {message}")
             else:
                 st.error("Please enter both email and password")
 
-    with tab2:
+    with tab3:
         st.subheader("Create Account")
         new_email = st.text_input("Email", key="signup_email")
         new_password = st.text_input("Password", type="password", key="signup_password")
@@ -568,24 +587,162 @@ def export_to_pdf(cover_letter_text):
 
 # ===== MAIN APP =====
 
-# Check authentication
+# Show home page FIRST (before auth)
+show_app = st.session_state.get("show_app", False)
+
+if not show_app:
+    st.title("🤖 AI-Powered Application Assistant")
+    st.markdown("### Your intelligent companion for job applications")
+
+    st.markdown("---")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("### 📝 Smart Cover Letters")
+        st.markdown("""
+        Generate professional, tailored cover letters in seconds.
+        - Multiple length options
+        - Customizable tone
+        - Download as .txt, .docx, or .pdf
+        """)
+
+    with col2:
+        st.markdown("### 💬 Answer Questions")
+        st.markdown("""
+        Craft compelling answers to application questions.
+        - Context-aware responses
+        - Avoid repetition across answers
+        - Highlight specific experiences
+        """)
+
+    with col3:
+        st.markdown("### 📊 Track & Save")
+        st.markdown("""
+        Keep your application materials organized.
+        - Save multiple resumes
+        - Cover letter history
+        - Profile management
+        """)
+
+    st.markdown("---")
+
+    st.markdown("### How It Works")
+    st.markdown("""
+    1. **Enter your details** - Add your resume, job info, and why you want the role
+    2. **Generate instantly** - AI creates professional content tailored to the job
+    3. **Download & apply** - Get your cover letter in any format and submit with confidence
+    """)
+
+    st.markdown("---")
+
+    st.markdown("### Technical Implementation")
+    st.markdown("""
+    Built by **Nicolo Pastrone** with **Python** and **Streamlit** for a responsive web interface. Integrated **Anthropic's Claude API** for intelligent text generation with custom prompt engineering. **Supabase** handles authentication and PostgreSQL database with row-level security policies. Developed collaboratively with **Claude Code**, demonstrating modern AI-assisted development workflows.
+    """)
+
+    st.markdown("---")
+
+    col_start1, col_start2, col_start3 = st.columns([1, 1, 1])
+
+    with col_start2:
+        if st.button("Get Started", type="primary", use_container_width=True):
+            st.session_state["show_app"] = True
+            st.rerun()
+
+    st.caption("No account needed! Click 'Get Started' to try the app instantly.")
+
+    st.stop()
+
+# Check authentication (allow guest mode)
 user_id = check_auth()
-if not user_id:
+is_guest = st.session_state.get("guest_mode", False)
+
+if not user_id and not is_guest:
     show_auth_page()
     st.stop()
 
-st.title("Application Assistant")
+st.title("AI-Powered Application Assistant")
 st.caption("Your AI-powered job application toolkit")
 
-# Load profile
-profile = load_profile(user_id)
+# First-time user welcome banner
+if st.session_state.get("first_time_user", True):
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        st.success("""
+        **Welcome!** Here's how to get started:
+        1. Enter your profile info in the sidebar (name, address, resume)
+        2. Scroll down to fill in job details (company, role, job description)
+        3. Click 'Generate Cover Letter' to create your tailored letter
+        4. Download in your preferred format (.txt, .docx, or .pdf)
+
+        Need help? Click 'How to Use This App' in the sidebar.
+        """)
+    with col2:
+        if st.button("Got it"):
+            st.session_state["first_time_user"] = False
+            st.rerun()
+
+# Show guest banner
+if is_guest:
+    st.info("You're using guest mode. Create an account to save your resumes, cover letters, and history!")
+
+# Load profile (only for logged-in users)
+profile = load_profile(user_id) if user_id else {
+    "linkedin_url": "",
+    "github_url": "",
+    "portfolio_url": "",
+    "candidate_name": "",
+    "candidate_address": "",
+    "default_length": "concise",
+    "default_tone": "conversational"
+}
 
 # Sidebar for profile and resume management
 with st.sidebar:
-    # Logout button at top
-    if st.button("Logout", use_container_width=True):
-        logout_user()
+    # Home button
+    if st.button("Home", use_container_width=True):
+        st.session_state["show_app"] = False
         st.rerun()
+
+    # Help section
+    with st.expander("How to Use This App"):
+        st.markdown("""
+        **Quick Start:**
+        1. Enter your name and address in 'Your Profile'
+        2. Add your resume (paste or upload)
+        3. Fill in job details below
+        4. Click 'Generate Cover Letter'
+
+        **Main Sections:**
+        - **Job Details**: Company, role, job description
+        - **Generate Cover Letter**: Create tailored cover letters
+        - **Answer Application Question**: Handle essay questions
+
+        **Tips for Best Results:**
+        - Be specific in "Why do you want this job?"
+        - Include the full job description when possible
+        - Use "Resume Highlight" to emphasize specific experiences
+        - Try different tones (Professional, Conversational, etc.)
+
+        **Guest vs Account:**
+        - Guests can generate and download everything
+        - Accounts can save resumes and cover letter history
+        """)
+
+    st.divider()
+
+    # Show login/logout based on mode
+    if is_guest:
+        st.info("Create an account to save your work!")
+        if st.button("Sign Up / Login", use_container_width=True, type="primary"):
+            if "guest_mode" in st.session_state:
+                del st.session_state["guest_mode"]
+            st.rerun()
+    else:
+        if st.button("Logout", use_container_width=True):
+            logout_user()
+            st.rerun()
 
     st.divider()
 
@@ -606,46 +763,50 @@ with st.sidebar:
 
     st.divider()
 
-    # Section 2: Profile Links
-    st.subheader("Profile Links")
+    # Section 2: Profile Links (only for logged-in users)
+    if not is_guest:
+        st.subheader("Profile Links")
 
-    # Display saved links with copy functionality
-    if profile.get("linkedin_url") or profile.get("github_url") or profile.get("portfolio_url"):
-        if profile.get("linkedin_url"):
-            st.markdown("**LinkedIn:**")
-            st.code(profile['linkedin_url'], language=None)
+        # Display saved links with copy functionality
+        if profile.get("linkedin_url") or profile.get("github_url") or profile.get("portfolio_url"):
+            if profile.get("linkedin_url"):
+                st.markdown("**LinkedIn:**")
+                st.code(profile['linkedin_url'], language=None)
 
-        if profile.get("github_url"):
-            st.markdown("**GitHub:**")
-            st.code(profile['github_url'], language=None)
+            if profile.get("github_url"):
+                st.markdown("**GitHub:**")
+                st.code(profile['github_url'], language=None)
 
-        if profile.get("portfolio_url"):
-            st.markdown("**Portfolio:**")
-            st.code(profile['portfolio_url'], language=None)
+            if profile.get("portfolio_url"):
+                st.markdown("**Portfolio:**")
+                st.code(profile['portfolio_url'], language=None)
+        else:
+            st.info("No profile links saved yet.")
+
+        # Edit profile links
+        with st.expander("Edit Profile Links", expanded=False):
+            linkedin_url = st.text_input("LinkedIn URL:", value=profile.get("linkedin_url", ""))
+            github_url = st.text_input("GitHub URL:", value=profile.get("github_url", ""))
+            portfolio_url = st.text_input("Portfolio URL:", value=profile.get("portfolio_url", ""))
+
+            if st.button("Save Profile Links", use_container_width=True):
+                profile["linkedin_url"] = linkedin_url
+                profile["github_url"] = github_url
+                profile["portfolio_url"] = portfolio_url
+                save_profile(user_id, profile)
+                st.success("Profile links saved!")
+                st.rerun()
+
+        st.divider()
+
+    # Section 3: Resume Management (only for logged-in users)
+    if not is_guest:
+        st.subheader("Resume Management")
+
+        # Load existing resumes
+        saved_resumes = load_resumes(user_id)
     else:
-        st.info("No profile links saved yet.")
-
-    # Edit profile links
-    with st.expander("Edit Profile Links", expanded=False):
-        linkedin_url = st.text_input("LinkedIn URL:", value=profile.get("linkedin_url", ""))
-        github_url = st.text_input("GitHub URL:", value=profile.get("github_url", ""))
-        portfolio_url = st.text_input("Portfolio URL:", value=profile.get("portfolio_url", ""))
-
-        if st.button("Save Profile Links", use_container_width=True):
-            profile["linkedin_url"] = linkedin_url
-            profile["github_url"] = github_url
-            profile["portfolio_url"] = portfolio_url
-            save_profile(user_id, profile)
-            st.success("Profile links saved!")
-            st.rerun()
-
-    st.divider()
-
-    # Section 3: Resume Management
-    st.subheader("Resume Management")
-
-    # Load existing resumes
-    saved_resumes = load_resumes(user_id)
+        saved_resumes = []
 
     if saved_resumes:
         # Quick action: Use Latest Resume
@@ -704,32 +865,31 @@ with st.sidebar:
             if "uploaded_file" in st.session_state:
                 del st.session_state["uploaded_file"]
 
-        # Save resume button
-        if st.button("Save Resume", use_container_width=True):
-            if not all([candidate_name, candidate_address, resume_text]):
-                st.error("Please fill in name, address, and resume text to save.")
-            else:
-                resume_data = {
-                    "resume_name": candidate_name,
-                    "resume_address": candidate_address,
-                    "resume_text": resume_text
-                }
+        # Save resume button (only for logged-in users)
+        if is_guest:
+            st.info("Create an account to save resumes for later use.")
+        else:
+            if st.button("Save Resume", use_container_width=True):
+                if not all([candidate_name, candidate_address, resume_text]):
+                    st.error("Please fill in name, address, and resume text to save.")
+                else:
+                    resume_data = {
+                        "resume_name": candidate_name,
+                        "resume_address": candidate_address,
+                        "resume_text": resume_text
+                    }
 
-                # Save file if uploaded
-                if "uploaded_file" in st.session_state and "uploaded_file_name" in st.session_state:
-                    file_obj = st.session_state["uploaded_file"]
-                    file_name = st.session_state["uploaded_file_name"]
-                    # Note: File storage removed for Supabase - only storing text
-                    # Could add Supabase Storage in future if needed
+                    save_resume(user_id, resume_data)
+                    st.success(f"Resume saved! You now have {len(load_resumes(user_id))} saved resume(s).")
 
-                save_resume(user_id, resume_data)
-                st.success(f"Resume saved! You now have {len(load_resumes(user_id))} saved resume(s).")
+    if not is_guest:
+        st.divider()
 
-    st.divider()
-
-    # Section 4: Cover Letter History
-    st.subheader("Cover Letter History")
-    saved_cover_letters = load_cover_letters(user_id)
+        # Section 4: Cover Letter History
+        st.subheader("Cover Letter History")
+        saved_cover_letters = load_cover_letters(user_id)
+    else:
+        saved_cover_letters = []
     if saved_cover_letters:
         st.caption(f"Total saved: {len(saved_cover_letters)}")
         for i, cl in enumerate(reversed(saved_cover_letters[-5:])):
@@ -976,55 +1136,59 @@ if "last_cover_letter" in st.session_state and st.session_state["last_cover_lett
             use_container_width=True
         )
 
-    # Save button
+    # Save button (only for logged-in users)
     st.divider()
-    if st.button("Save Cover Letter", use_container_width=True):
-        cover_letter_data = {
-            "company": gen_data.get("company", ""),
-            "role": gen_data.get("role", ""),
-            "cover_letter": cover_letter,
-            "date_created": datetime.now().strftime("%Y-%m-%d %H:%M")
-        }
-        save_cover_letter(user_id, cover_letter_data)
-        st.session_state["cover_letter_saved"] = True
-        st.rerun()
-
-    # Rating system
-    st.divider()
-    st.subheader("Rate this cover letter")
-    st.caption("Help improve future generations by rating this output")
-
-    rating_col1, rating_col2 = st.columns(2)
-
-    with rating_col1:
-        if st.button("Good", use_container_width=True):
-            rating_data = {
-                "rating": "good",
-                "cover_letter": cover_letter,
-                "resume_text": gen_data.get("resume_text", ""),
-                "job_description": gen_data.get("job_description", ""),
-                "why_want_job": gen_data.get("why_want_job", ""),
+    if is_guest:
+        st.info("Create an account to save cover letters to your history!")
+    else:
+        if st.button("Save Cover Letter", use_container_width=True):
+            cover_letter_data = {
                 "company": gen_data.get("company", ""),
                 "role": gen_data.get("role", ""),
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
-            save_rating(user_id, rating_data)
-            st.success("Thanks for your feedback!")
-
-    with rating_col2:
-        if st.button("Bad", use_container_width=True):
-            rating_data = {
-                "rating": "bad",
                 "cover_letter": cover_letter,
-                "resume_text": gen_data.get("resume_text", ""),
-                "job_description": gen_data.get("job_description", ""),
-                "why_want_job": gen_data.get("why_want_job", ""),
-                "company": gen_data.get("company", ""),
-                "role": gen_data.get("role", ""),
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "date_created": datetime.now().strftime("%Y-%m-%d %H:%M")
             }
-            save_rating(user_id, rating_data)
-            st.info("Thanks for your feedback. We'll use this to improve!")
+            save_cover_letter(user_id, cover_letter_data)
+            st.session_state["cover_letter_saved"] = True
+            st.rerun()
+
+    # Rating system (optional save for guests)
+    if not is_guest:
+        st.divider()
+        st.subheader("Rate this cover letter")
+        st.caption("Help improve future generations by rating this output")
+
+        rating_col1, rating_col2 = st.columns(2)
+
+        with rating_col1:
+            if st.button("Good", use_container_width=True):
+                rating_data = {
+                    "rating": "good",
+                    "cover_letter": cover_letter,
+                    "resume_text": gen_data.get("resume_text", ""),
+                    "job_description": gen_data.get("job_description", ""),
+                    "why_want_job": gen_data.get("why_want_job", ""),
+                    "company": gen_data.get("company", ""),
+                    "role": gen_data.get("role", ""),
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                save_rating(user_id, rating_data)
+                st.success("Thanks for your feedback!")
+
+        with rating_col2:
+            if st.button("Bad", use_container_width=True):
+                rating_data = {
+                    "rating": "bad",
+                    "cover_letter": cover_letter,
+                    "resume_text": gen_data.get("resume_text", ""),
+                    "job_description": gen_data.get("job_description", ""),
+                    "why_want_job": gen_data.get("why_want_job", ""),
+                    "company": gen_data.get("company", ""),
+                    "role": gen_data.get("role", ""),
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                save_rating(user_id, rating_data)
+                st.info("Thanks for your feedback. We'll use this to improve!")
 
 # Answer Application Question Section
 st.divider()

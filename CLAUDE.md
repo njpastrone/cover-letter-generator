@@ -1,4 +1,4 @@
-# Application Assistant - Project Documentation
+# AI-Powered Application Assistant - Project Documentation
 
 ## NON-NEGOTIABLE PROJECT RULES
 
@@ -52,36 +52,44 @@ Candidate's Typed First and Last Name
 
 ## Project Overview
 
-Application Assistant is a comprehensive job application toolkit that helps users:
-1. Manage their professional profile (LinkedIn, GitHub, Portfolio links)
-2. Store and reuse resumes (supports paste, PDF, and DOCX uploads)
-3. Generate tailored cover letters using AI
-4. Track application history and cover letter performance
+AI-Powered Application Assistant is a comprehensive job application toolkit that helps users:
+1. Generate professional cover letters with AI
+2. Answer application questions intelligently
+3. Manage resumes and profile information
+4. Track application history (with account)
 
 ### Core Workflow
-1. Save profile links and latest resume
-2. Quick-load latest resume with one click
+1. **Guest Mode**: Use immediately without signup - generate and download cover letters
+2. **Account Mode**: Save profile, resumes, and cover letter history
 3. Input company, role, and job description
-4. Generate professional cover letter
-5. Rate output and save for future reference
+4. Generate professional cover letter or answer application questions
+5. Download in multiple formats (.txt, .docx, .pdf)
 
 ## Technical Stack
 
-- Python 3.x
-- Streamlit (front-end framework)
-- PyPDF2 (PDF parsing)
-- python-docx (DOCX parsing)
-- Local JSON file storage for data persistence
-- Claude Haiku API for cover letter generation (cost-effective at ~$0.0008 per letter)
+- **Frontend**: Python 3.x + Streamlit
+- **AI Engine**: Anthropic Claude Haiku API (~$0.0008 per letter)
+- **Database**: Supabase (PostgreSQL with row-level security)
+- **Authentication**: Supabase Auth (email/password + guest mode)
+- **File Processing**: PyPDF2 (PDF), python-docx (DOCX), fpdf2 (PDF export)
+- **Deployment**: Streamlit Community Cloud
 
 ## Features Implemented
 
-### Profile Management
-- Save LinkedIn, GitHub, and Portfolio URLs
-- Quick access links displayed in sidebar
-- Profile persists across sessions
+### User Experience
+- **Home Page**: Feature overview, technical details, and "Get Started" CTA
+- **Guest Mode**: Use app immediately without account creation
+- **Authentication**: Email/password signup with Supabase
+- **First-Time User Guide**: Welcome banner with quick start steps
+- **Help Section**: Collapsible sidebar guide always available
 
-### Resume Management
+### Profile Management (Account Only)
+- Save LinkedIn, GitHub, and Portfolio URLs
+- Quick access links with copy functionality
+- Profile persists across sessions
+- Name and address auto-fill from saved resumes
+
+### Resume Management (Account Only)
 - Save multiple resumes with metadata
 - Upload PDF/DOCX files with automatic text extraction
 - "Use Latest Resume" one-click button for fast workflow
@@ -99,19 +107,22 @@ Application Assistant is a comprehensive job application toolkit that helps user
   - Professional - Formal and traditional (best for: corporate, finance, law, government)
   - Enthusiastic - Energetic and passionate (best for: startups, creative roles, mission-driven orgs)
   - Confident - Bold and direct (best for: competitive roles, leadership positions)
-- Download generated cover letters
-- Save cover letters to history
+- **Resume Highlight**: Emphasize specific experiences from resume
+- **Additional Context**: Add general application context
+- Download in multiple formats (.txt, .docx, .pdf)
+- Save cover letters to history (account only)
 
-### Data Collection & ML Preparation
+### Application Question Answerer
+- Generate intelligent answers to application essay questions
+- Context-aware: Avoids repeating content from cover letter or previous answers
+- Question-specific notes for more authentic responses
+- Session tracking to prevent repetition across multiple questions
+- "Clear Session" button to start fresh for new applications
+
+### Data Collection & ML Preparation (Account Only)
 - Save cover letters for future reference
 - Rating system (Good/Bad) for each generation
-- All ratings stored in `ratings.json` with full context:
-  - Generated cover letter
-  - Input resume
-  - Job description
-  - Why they want the job
-  - Company and role info
-  - Timestamp
+- All ratings stored in Supabase `ratings` table with full context
 - This data can be used to:
   - Train a custom ML model
   - Fine-tune prompts
@@ -151,18 +162,38 @@ The prompt adapts based on user preferences:
 
 Each option includes specific guidance on vocabulary, formality, and style appropriate for different industries and company cultures.
 
-## Data Files
+## Database Schema (Supabase)
 
-- `profile.json` - User profile with LinkedIn, GitHub, Portfolio URLs and preferences
-- `resumes.json` - Saved user resumes with metadata (name, address, text, date)
-- `cover_letters.json` - All generated and saved cover letters with metadata
-- `ratings.json` - Rated cover letters with full context for ML training
+### Tables
+- **profiles** - User profile with links, name, address, and preferences (RLS enabled)
+- **resumes** - Saved user resumes with metadata (user_id, resume_name, resume_address, resume_text, date_saved)
+- **cover_letters** - Generated and saved cover letters (user_id, company, role, cover_letter, date_created)
+- **ratings** - Rated cover letters with full context for ML training (user_id, rating, cover_letter, resume_text, job_description, etc.)
+
+### Authentication
+- Supabase Auth with email/password
+- Row-level security policies ensure users only access their own data
+- Guest mode for anonymous usage (no database access)
+
+## Deployment
+
+### Local Development
+1. Install dependencies: `pip install -r requirements.txt`
+2. Set up `.env` file with Supabase and Anthropic credentials
+3. Run: `streamlit run app.py`
+
+### Streamlit Community Cloud
+1. Push code to GitHub (secrets in `.gitignore`)
+2. Deploy on share.streamlit.io
+3. Add secrets in Streamlit Cloud settings
+4. See `DEPLOYMENT.md` for detailed instructions
 
 ## Future Enhancements
 
-- Application tracking (companies applied to, dates, status)
-- Email templates for follow-ups
-- Interview preparation materials
-- Multiple cover letter templates
-- Export to Word/PDF format
-- Browser extension for job board integration
+- Application tracking dashboard (companies applied to, dates, status)
+- Email templates for follow-ups and thank-you notes
+- Interview preparation materials and common questions
+- Multiple cover letter templates/styles
+- Chrome extension for job board integration
+- Resume builder/editor
+- AI-powered resume optimization suggestions
