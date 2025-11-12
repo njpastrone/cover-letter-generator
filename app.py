@@ -591,7 +591,7 @@ def export_to_pdf(cover_letter_text):
 show_app = st.session_state.get("show_app", False)
 
 if not show_app:
-    st.title("🤖 AI-Powered Application Assistant")
+    st.title("AI-Powered Application Assistant")
     st.markdown("### Your intelligent companion for job applications")
 
     st.markdown("---")
