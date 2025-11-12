@@ -746,28 +746,7 @@ with st.sidebar:
 
     st.divider()
 
-    # Section 1: Your Profile (Candidate Info)
-    st.header("Your Profile")
-
-    candidate_name = st.text_input(
-        "Your Full Name:",
-        value=st.session_state.get("candidate_name", ""),
-        key="candidate_name_input"
-    )
-    st.session_state["candidate_name"] = candidate_name
-
-    candidate_address = st.text_area(
-        "Your Address:",
-        value=st.session_state.get("candidate_address", ""),
-        height=80,
-        help="Auto-filled from saved resumes but you can edit it.",
-        key="candidate_address_input"
-    )
-    st.session_state["candidate_address"] = candidate_address
-
-    st.divider()
-
-    # Section 2: Profile Links (only for logged-in users)
+    # Section 1: Profile Links (only for logged-in users)
     if not is_guest:
         st.subheader("Profile Links")
 
@@ -803,7 +782,7 @@ with st.sidebar:
 
         st.divider()
 
-    # Section 3: Resume Management (only for logged-in users)
+    # Section 2: Resume Management (only for logged-in users)
     if not is_guest:
         st.subheader("Resume Management")
 
@@ -939,21 +918,55 @@ with st.sidebar:
         st.info("No saved cover letters yet.")
 
 # Main area - Job Details and Cover Letter Generation
-# Get resume text from session (populated via sidebar)
-resume_text = st.session_state.get("resume_text", "")
-candidate_name = st.session_state.get("candidate_name", "")
-candidate_address = st.session_state.get("candidate_address", "")
+
+# ===== SECTION 0: ENTER YOUR INFO =====
+st.header("Step 1: Enter Your Info")
+st.caption("Provide your profile information and resume")
+
+# Create three columns for Name, Address, Resume
+info_col1, info_col2, info_col3 = st.columns([1, 1, 2])
+
+with info_col1:
+    candidate_name = st.text_input(
+        "Your Full Name:",
+        value=st.session_state.get("candidate_name", ""),
+        key="candidate_name_input",
+        placeholder="e.g., Jane Smith"
+    )
+    st.session_state["candidate_name"] = candidate_name
+
+with info_col2:
+    candidate_address = st.text_area(
+        "Your Address:",
+        value=st.session_state.get("candidate_address", ""),
+        height=80,
+        help="Auto-filled from saved resumes but you can edit it.",
+        key="candidate_address_input",
+        placeholder="123 Main St\nBoston, MA 02101"
+    )
+    st.session_state["candidate_address"] = candidate_address
+
+with info_col3:
+    resume_text = st.text_area(
+        "Your Resume:",
+        value=st.session_state.get("resume_text", ""),
+        height=80,
+        help="Paste your resume text here, or use Resume Management in sidebar to save resumes for quick access.",
+        key="resume_text_input",
+        placeholder="Paste your resume text here..."
+    )
+    st.session_state["resume_text"] = resume_text
 
 # Show status
-if not resume_text:
-    st.warning("Please add or select a resume from the sidebar to get started.")
-else:
-    st.success(f"Using resume for: {candidate_name if candidate_name else 'Unknown'}")
+if resume_text and candidate_name:
+    st.success(f"Ready to generate cover letters for {candidate_name}")
+elif not resume_text:
+    st.info("Tip: If you have an account, use the Resume Management section in the sidebar to save and reuse resumes.")
 
 st.divider()
 
 # ===== SECTION 1: JOB DETAILS =====
-st.header("Enter Job Details")
+st.header("Step 2: Enter Job Details")
 st.caption("Provide information about the job you're applying for")
 
 # Action buttons
@@ -991,7 +1004,7 @@ Requirements:
 - Experience with modern web frameworks
 - Passion for AI safety and alignment
 - Excellent communication skills"""
-        st.session_state["why_want_job"] = "I'm passionate about AI safety and want to contribute to building more reliable and beneficial AI systems. My experience in machine learning research and software development would allow me to make meaningful contributions to Anthropic's mission."
+        st.session_state["why_want_job_input"] = "I'm passionate about AI safety and want to contribute to building more reliable and beneficial AI systems. My experience in machine learning research and software development would allow me to make meaningful contributions to Anthropic's mission."
         st.success("Sample data loaded! Check the sidebar and form fields.")
         st.rerun()
 
@@ -1000,7 +1013,7 @@ with action_col2:
         # Clear all session state keys related to the form
         keys_to_clear = [
             "company_name_sample", "role_title_sample", "job_description_sample",
-            "why_want_job", "resume_text", "candidate_name", "candidate_address",
+            "resume_text", "candidate_name", "candidate_address",
             "company_name_key", "role_title_key", "job_description_key",
             "additional_context_key", "resume_highlight_general", "why_want_job_input"
         ]
@@ -1050,7 +1063,7 @@ resume_highlight = st.text_area(
 st.divider()
 
 # ===== SECTION 2: GENERATE COVER LETTER =====
-st.header("Generate Cover Letter")
+st.header("Step 3: Generate Cover Letter")
 st.caption("Configure preferences and generate a tailored cover letter")
 
 # Preferences
@@ -1081,15 +1094,7 @@ with col2:
 
 st.subheader("Statement of Interest")
 
-why_want_job = st.text_area(
-    "Why do you want this job? (rough notes are fine):",
-    value=st.session_state.get("why_want_job", ""),
-    height=150,
-    help="Be honest and specific. This will be refined into professional cover letter language.",
-    key="why_want_job_input"
-)
-
-# Generate statement button
+# Generate statement button (placed before text area so generated content shows up)
 if st.button("Generate Statement", help="Auto-generate a 'why I want this job' statement based on your resume and the job details"):
     if not all([resume_text, company_name, role_title]):
         st.error("Please fill in your resume, company name, and role title to generate a statement.")
@@ -1102,10 +1107,19 @@ if st.button("Generate Statement", help="Auto-generate a 'why I want this job' s
                     role_title,
                     job_description
                 )
-                st.session_state["why_want_job"] = statement
+                st.session_state["why_want_job_input"] = statement
+                st.success("Statement generated!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Error generating statement: {str(e)}")
+
+why_want_job = st.text_area(
+    "Why do you want this job? (rough notes are fine):",
+    value=st.session_state.get("why_want_job_input", ""),
+    height=150,
+    help="Be honest and specific. This will be refined into professional cover letter language.",
+    key="why_want_job_input"
+)
 
 # Generate button
 if st.button("Generate Cover Letter", type="primary"):
@@ -1267,7 +1281,7 @@ st.divider()
 # Header with Clear Session button
 col1, col2 = st.columns([3, 1])
 with col1:
-    st.header("Answer Application Question")
+    st.header("Step 4: Answer Application Question (Optional)")
     st.caption("Got a random question on the application? Generate a tailored answer based on your resume and job details.")
 with col2:
     if st.button("Clear Session", help="Start fresh for a new application. Clears tracked responses to avoid repetition."):

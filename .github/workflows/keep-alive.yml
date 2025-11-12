@@ -1,0 +1,35 @@
+# Keep Streamlit app awake by pinging it periodically
+name: Keep Alive
+
+# When this workflow runs
+on:
+  # Run every 10 minutes
+  schedule:
+    - cron: '*/10 * * * *'
+
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  ping:
+    # Use Ubuntu (free tier, lightweight)
+    runs-on: ubuntu-latest
+
+    steps:
+      # Ping the app with retry logic
+      - name: Ping Streamlit App
+        # Continue even if this step fails (don't mark workflow as failed)
+        continue-on-error: true
+        run: |
+          # Retry up to 3 times with 5 second delays
+          for i in 1 2 3; do
+            echo "Attempt $i: Pinging app..."
+            if curl -f -s -o /dev/null -w "%{http_code}" "https://ai-powered-application-assistant.streamlit.app/?ping=1" | grep -q "200"; then
+              echo "✓ App responded successfully"
+              exit 0
+            fi
+            echo "× Ping failed, retrying..."
+            sleep 5
+          done
+          echo "⚠ All ping attempts failed, but continuing workflow"
+          exit 0
